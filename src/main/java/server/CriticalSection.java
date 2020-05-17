@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 
-public class criticalSection extends Thread{
+public class CriticalSection extends Thread{
 
     static final int LIBERADA = 0;
     static final int BUSCADA = 1;
@@ -24,7 +24,7 @@ public class criticalSection extends Thread{
     static String ip_propia;
     static int num_proceso;
 
-    public criticalSection(int num, String ip) {
+    public CriticalSection(int num, String ip) {
         this.num_proceso = num;
         this.ip_propia = ip;
     }

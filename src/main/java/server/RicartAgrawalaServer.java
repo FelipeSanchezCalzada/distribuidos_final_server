@@ -8,7 +8,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;
-import java.math.BigInteger;
 import java.net.URI;
 
 
@@ -129,7 +128,7 @@ public class RicartAgrawalaServer {
            }
        }
 
-        criticalSection cs = new criticalSection(num_proceso, ip_propia);
+        CriticalSection cs = new CriticalSection(num_proceso, ip_propia);
         cs.start();
         System.out.println("Después de inicialization");
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
