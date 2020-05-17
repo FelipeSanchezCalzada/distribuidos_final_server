@@ -139,7 +139,7 @@ public class RicartAgrawalaServer {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("iniciarNTP")
-    public String iniciarNTP(){
+    public String iniciarNTP(@QueryParam("procesos") String procesos){
         System.out.println("en IniciarNTP");
         long offset;
         long delay;
@@ -160,7 +160,7 @@ public class RicartAgrawalaServer {
             URI uri = UriBuilder.fromUri("http://"+ip+"/NTPserver").build();
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri);
-            for (int i = 0; i < 10 ; i++) {
+             for (int i = 0; i < 10 ; i++) {
                 Long t0 = System.currentTimeMillis();
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
                 Long t3 = System.currentTimeMillis();
@@ -216,10 +216,10 @@ public class RicartAgrawalaServer {
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
                 Long t3 = System.currentTimeMillis();
                 String[] parts = res.split(delim);
-                Long t1 = Long.parseLong(parts[0]);
-                Long t2 = Long.parseLong(parts[1]);
-                Long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
-                Long t_delay = (t1-t0) + (t3-t2);
+                long t1 = Long.parseLong(parts[0]);
+                long t2 = Long.parseLong(parts[1]);
+                long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
+                long t_delay = (t1-t0) + (t3-t2);
 
                 if(delay > t_delay) {
                     delay = t_delay;
