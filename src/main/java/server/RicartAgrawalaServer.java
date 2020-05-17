@@ -103,17 +103,22 @@ public class RicartAgrawalaServer {
     }
 
 
+    /*
+    * Inicia el programa el grueso del programa en si mismo.
+    * Comienzan a simularse los cálculos, etc.
+    *
+    * */
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("init")
-    public Response init(@QueryParam("procesos") String procesos) {
+    public Response init(String body) {
+        System.out.println(body);
 
-        System.out.println(procesos);
-        String[] parts = procesos.split(delim);
+        String[] parts = body.split(delim);
         num_proceso = Integer.parseInt(parts[0]);
         ip_propia = parts[1];
-        System.out.println("Mi ip propia es: "+ip_propia);
+        System.out.println("Mi ip propia es: " + ip_propia);
         System.out.println("Y el resto de ips:");
        /* for( String part : parts){
             if(!part.equals(ip_propia)||!part.equals(String.valueOf(num_proceso))){
@@ -121,6 +126,7 @@ public class RicartAgrawalaServer {
                ips_procesos = ips_procesos.concat(part);
             }
         }*/
+
        for(int i=2;i<parts.length;i++){
            if(!parts[i].equals(ip_propia)) {
                ips_procesos = ips_procesos.concat(parts[i]);
@@ -132,7 +138,7 @@ public class RicartAgrawalaServer {
         cs.start();
         System.out.println("Después de inicialization");
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        return new Response("exito");
+        return new Response("ok");
     }
 
     @POST
