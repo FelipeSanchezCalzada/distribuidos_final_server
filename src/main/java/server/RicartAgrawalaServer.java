@@ -12,6 +12,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.Response;
+
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class RicartAgrawalaServer {
     private final String delim = "-";
     private final static Object seccion = new Object();
     //Difusion dif = new Difusion();
-    ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
+    Proceso[] procesos = new Proceso[0];// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
 
 
@@ -105,7 +107,7 @@ public class RicartAgrawalaServer {
             synchronized (seccion) {
                 seccion.notifyAll();
             }
-            return  new Response("Seccion liberada");
+            return  Response.status(Response.Status.OK).entity("Sección liberada").build();
 
     }
 
@@ -127,17 +129,18 @@ public class RicartAgrawalaServer {
             array_procesos = mapper.readValue(body, Proceso[].class);
         } catch (IOException e) {
             e.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity("No se especificaron los procesos en el formato correcto").build();
         }
-        this.procesos = new ArrayList<>(Arrays.asList(array_procesos));
+        if (array_procesos.length == 0){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
+        }
 
-        for (Proceso p: array_procesos){
+        this.procesos = array_procesos;
+
+        for (Proceso p: this.procesos){
             System.out.println(p);
         }
-        return new Response("ok");
-        /*
-        ip_propia = parts[1];
-        System.out.println("Mi ip propia es: " + ip_propia);
-        System.out.println("Y el resto de ips:");
+        System.out.println("Mi ip propia es: " + this.procesos[0].ip);
        /* for( String part : parts){
             if(!part.equals(ip_propia)||!part.equals(String.valueOf(num_proceso))){
                 System.out.println(part);
@@ -150,13 +153,12 @@ public class RicartAgrawalaServer {
                ips_procesos = ips_procesos.concat(parts[i]);
                ips_procesos = ips_procesos.concat(delim);
            }
-       }
+       }*/
 
-        CriticalSection cs = new CriticalSection(num_proceso, ip_propia);
+        CriticalSection cs = new CriticalSection(this.procesos[0].numero, this.procesos[0].ip);
         cs.start();
-        System.out.println("Después de inicialization");
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        return new Response("ok");*/
+        System.out.println("Inicialización correcta");
+        return Response.status(Response.Status.OK).entity("Corriendo con éxito").build();
     }
 
     /*
