@@ -14,17 +14,20 @@ public class Peticion implements Runnable {
     WebTarget target;
     CountDownLatch cdl;
     int C_lamport;
-    public Peticion(URI uri, CountDownLatch c, int reloj) {
+    int id;
+
+    public Peticion(URI uri, CountDownLatch c, int reloj, int id) {
         this.uri = uri;
         this.cdl = c;
         this.C_lamport = reloj;
+        this.id = id;
     }
 
     @Override
         public void run() {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri);
-        String res = target.path("peticion").queryParam("reloj",C_lamport).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = target.path("peticion").queryParam("reloj",C_lamport).queryParam("id", this.id + "" ).request(MediaType.APPLICATION_JSON).get(String.class);
         System.out.println("La respuesta a la peticion es: " + res);
         cdl.countDown();
         }
