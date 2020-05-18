@@ -7,21 +7,24 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
+import server.models.Proceso;
 
 public class Difusion {
 
     String ips_procesos;
     private final String delim = "-";
-    int procesos=1;
+    ArrayList<Proceso> procesos;
     int C_lamport=0;
+    int nprocesos;
 
 
 
 
 
-    public Difusion(String proc, int C) {
-        this.ips_procesos = proc;
+    public Difusion(ArrayList<Proceso> proc, int C) {
+        this.procesos = proc;
         this.C_lamport = C;
     }
 
@@ -33,16 +36,16 @@ public class Difusion {
         client.property(ClientProperties.CONNECT_TIMEOUT, 0);
         client.property(ClientProperties.READ_TIMEOUT,    0);
         */
-        String[] ips = ips_procesos.split(delim);
-        procesos = ips.length;
+
+        nprocesos = procesos.size() - 1;
 
         //TODO multidifusion de las peticiones
-        CountDownLatch cdl = new CountDownLatch(procesos); // Esto en teoría espera a que n procesos llames al countdown cuando lo hayan recibido.
+        CountDownLatch cdl = new CountDownLatch(nprocesos); // Esto en teoría espera a que n procesos llames al countdown cuando lo hayan recibido.
         System.out.println("Esperar a:"+procesos);
 
-        for(String ip : ips){
-            System.out.println("en difusion a por la ip"+ ip);
-            URI uri = UriBuilder.fromUri("http://"+ip+"/RicartAgrawalaServer").build();
+        for(Proceso pr : procesos){
+            System.out.println("en difusion a por la ip"+ pr.getIp());
+            URI uri = UriBuilder.fromUri("http://"+pr.getIp()+"/RicartAgrawalaServer").build();
             new Thread(new Peticion(uri,cdl,C_lamport)).start();
         }
         try {

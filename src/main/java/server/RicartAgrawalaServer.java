@@ -46,21 +46,21 @@ public class RicartAgrawalaServer {
         return tiempos;
     }
 
-    /*
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("difusion")
     public String difusion() {
 
         estado = BUSCADA;
-        Difusion dif = new Difusion(ips_procesos,C_lamport);
+        Difusion dif = new Difusion(procesos,C_lamport);
         dif.check();
 
         //hacer la difusion a todas las otras maquinas
         estado = TOMADA;
         C_lamport++;
         return "exito";
-    }*/
+    }
 
 
     @GET
@@ -129,6 +129,8 @@ public class RicartAgrawalaServer {
             e.printStackTrace();
         }
         this.procesos = new ArrayList<>(Arrays.asList(array_procesos));
+        CriticalSection cs = new CriticalSection(array_procesos[0].getNumero(), array_procesos[0].getIp());
+        cs.start();
 
         for (Proceso p: array_procesos){
             System.out.println(p);
