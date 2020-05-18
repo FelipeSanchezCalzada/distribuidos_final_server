@@ -12,6 +12,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.Response;
+
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
@@ -105,7 +107,7 @@ public class RicartAgrawalaServer {
             synchronized (seccion) {
                 seccion.notifyAll();
             }
-            return  new Response("Seccion liberada");
+            return  Response.status(Response.Status.OK).entity("Sección liberada").build();
 
     }
 
@@ -127,6 +129,10 @@ public class RicartAgrawalaServer {
             array_procesos = mapper.readValue(body, Proceso[].class);
         } catch (IOException e) {
             e.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity("No se especificaron los procesos en el formato correcto").build();
+        }
+        if (array_procesos.length == 0){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
         }
         this.procesos = new ArrayList<>(Arrays.asList(array_procesos));
         CriticalSection cs = new CriticalSection(array_procesos[0].getNumero(), array_procesos[0].getIp());
@@ -152,20 +158,19 @@ public class RicartAgrawalaServer {
                ips_procesos = ips_procesos.concat(parts[i]);
                ips_procesos = ips_procesos.concat(delim);
            }
-       }
+       }*/
 
-        CriticalSection cs = new CriticalSection(num_proceso, ip_propia);
+        CriticalSection cs = new CriticalSection(this.procesos[0].numero, this.procesos[0].ip);
         cs.start();
-        System.out.println("Después de inicialization");
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        return new Response("ok");*/
+        System.out.println("Inicialización correcta");
+        return Response.status(Response.Status.OK).entity("Corriendo con éxito").build();
     }
 
     /*
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("iniciarNTP")
-    public String iniciarNTP(@QueryParam("procesos") String procesos){
+    public String iniciarNTP(){
         System.out.println("en IniciarNTP");
         long offset;
         long delay;
@@ -186,7 +191,7 @@ public class RicartAgrawalaServer {
             URI uri = UriBuilder.fromUri("http://"+ip+"/NTPserver").build();
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri);
-             for (int i = 0; i < 10 ; i++) {
+            for (int i = 0; i < 10 ; i++) {
                 Long t0 = System.currentTimeMillis();
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
                 Long t3 = System.currentTimeMillis();
@@ -243,10 +248,10 @@ public class RicartAgrawalaServer {
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
                 Long t3 = System.currentTimeMillis();
                 String[] parts = res.split(delim);
-                long t1 = Long.parseLong(parts[0]);
-                long t2 = Long.parseLong(parts[1]);
-                long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
-                long t_delay = (t1-t0) + (t3-t2);
+                Long t1 = Long.parseLong(parts[0]);
+                Long t2 = Long.parseLong(parts[1]);
+                Long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
+                Long t_delay = (t1-t0) + (t3-t2);
 
                 if(delay > t_delay) {
                     delay = t_delay;
