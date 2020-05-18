@@ -1,39 +1,38 @@
 package server;
 
 
-
-import server.models.Proceso;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
+import java.util.Random;
 
-public class CriticalSection extends Thread{
+public class CriticalSection extends Thread {
 
-    static final int LIBERADA = 0;
-    static final int BUSCADA = 1;
-    static final int TOMADA = 2;
-    static int estado;
-    static long clock_i;
-    static long clock_t;
-    static String ip_propia;
-    static int num_proceso;
+    final int LIBERADA = 0;
+    final int BUSCADA = 1;
+    final int TOMADA = 2;
+    final float rango_tarea_min =  0.3f;
+    final float rango_tarea_max = 0.5f;
+    final float rango_tarea_sc_min =  0.1f;
+    final float rango_tarea_sc_max = 0.3f;
+    int estado;
+    long clock_i;
+    long clock_t;
+    String ip_propia;
+    int num_proceso;
 
     public CriticalSection(int num, String ip) {
         this.num_proceso = num;
         this.ip_propia = ip;
     }
 
-    public void run(){
+    public void run() {
         FileWriter fw = null;
         PrintWriter bw = null;
 
@@ -43,6 +42,7 @@ public class CriticalSection extends Thread{
             //bw.write("Comienzo del proceso");
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
         /*try {
             Thread.sleep(5000); //esperamos 5 segundos para que se de tiempo a iniciar todos
@@ -57,7 +57,7 @@ public class CriticalSection extends Thread{
         WebTarget target = client.target(uri);
         System.out.println("En sc, mi ip es: " + ip_propia);
 
-        for(int i=0; i<10; i++) { // 100 ejecuciones
+        for (int i = 0; i < 10; i++) { // 100 ejecuciones
 
             //difusión de la petición
             //estado = BUSCADA;
@@ -65,28 +65,31 @@ public class CriticalSection extends Thread{
             // Aqui debería esperar el proceso a la respuesta de que tiene la entrada libre
             System.out.println("La respuesta del sistema es: " + res);
             //aceptado por todos
-            estado = TOMADA;
-            //entrada seccion critica
-            //TODO escribir log de entrada con el tiempo
-            String entrada = String.format("P%d E %s\n",num_proceso,System.currentTimeMillis());
-            System.out.printf(entrada);
-            bw.write(entrada);
-
 
             try {
-                Thread.sleep(1000);
+                long tiempo_tarea = (long) (1000 * (new Random().nextDouble() * (this.rango_tarea_max - this.rango_tarea_min)) + this.rango_tarea_min);
+                Thread.sleep(tiempo_tarea);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
+            estado = TOMADA;
+            //entrada seccion critica
+            String entrada = String.format("P%d E %s\n", this.num_proceso, System.currentTimeMillis());
+            System.out.println(entrada);
+            bw.println(entrada);
+            try {
+                long tiempo_tarea = (long) (1000 * (new Random().nextDouble() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min);
+                Thread.sleep(tiempo_tarea);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             //salida seccion critica
             estado = LIBERADA;
-            //TODO escribir log de salida con el tiempo
 
-            String salida = String.format("P%d S %s\n",num_proceso,System.currentTimeMillis());
+            String salida = String.format("P%d S %s\n", num_proceso, System.currentTimeMillis());
             System.out.println(salida);
-
-                bw.write(salida);
+            bw.write(salida);
 
 
             //mensaje de salida para poder responder a las peticiones
@@ -96,7 +99,7 @@ public class CriticalSection extends Thread{
             System.out.println("==============================================================");
         }
         try {
-                bw.close();
+            bw.close();
             if (fw != null) {
                 fw.close();
             }
@@ -105,9 +108,6 @@ public class CriticalSection extends Thread{
         }
 
     }
-
-
-
 
 
 }
