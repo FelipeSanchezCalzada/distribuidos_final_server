@@ -57,7 +57,7 @@ public class CriticalSection extends Thread {
         WebTarget target = client.target(uri);
         System.out.println("En sc, mi ip es: " + ip_propia);
 
-        for (int i = 0; i < 10; i++) { // 100 ejecuciones
+        for (int i = 0; i < 100; i++) { // 100 ejecuciones
 
             //difusión de la petición
             //estado = BUSCADA;
@@ -67,7 +67,7 @@ public class CriticalSection extends Thread {
             //aceptado por todos
 
             try {
-                long tiempo_tarea = (long) (1000 * (new Random().nextDouble() * (this.rango_tarea_max - this.rango_tarea_min)) + this.rango_tarea_min);
+                long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_max - this.rango_tarea_min)) + this.rango_tarea_min));
                 Thread.sleep(tiempo_tarea);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -79,7 +79,7 @@ public class CriticalSection extends Thread {
             System.out.println(entrada);
             bw.println(entrada);
             try {
-                long tiempo_tarea = (long) (1000 * (new Random().nextDouble() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min);
+                long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min));
                 Thread.sleep(tiempo_tarea);
             } catch (InterruptedException e) {
                 e.printStackTrace();
