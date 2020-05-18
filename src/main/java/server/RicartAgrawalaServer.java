@@ -141,7 +141,7 @@ public class RicartAgrawalaServer {
         for (Proceso p: array_procesos){
             System.out.println(p);
         }
-        return new Response("ok");
+
         /*
         ip_propia = parts[1];
         System.out.println("Mi ip propia es: " + ip_propia);
@@ -160,8 +160,7 @@ public class RicartAgrawalaServer {
            }
        }*/
 
-        CriticalSection cs = new CriticalSection(this.procesos[0].numero, this.procesos[0].ip);
-        cs.start();
+
         System.out.println("Inicialización correcta");
         return Response.status(Response.Status.OK).entity("Corriendo con éxito").build();
     }
