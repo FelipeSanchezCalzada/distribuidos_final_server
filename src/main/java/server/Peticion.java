@@ -25,7 +25,7 @@ public class Peticion implements Runnable {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri);
         String res = target.path("peticion").queryParam("reloj",C_lamport).request(MediaType.APPLICATION_JSON).get(String.class);
-        System.out.println("La respuesta a la difusion es: " + res);
+        System.out.println("La respuesta a la peticion es: " + res);
         cdl.countDown();
         }
 }

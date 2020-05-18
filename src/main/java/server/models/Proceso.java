@@ -9,12 +9,4 @@ public class Proceso {
     public String toString() {
         return "Numero: " + numero + " IP: " + ip;
     }
-
-    public int getNumero() {
-        return numero;
-    }
-
-    public String getIp() {
-        return ip;
-    }
 }

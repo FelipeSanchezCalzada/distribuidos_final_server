@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 
 @Path("RicartAgrawalaServer")
@@ -32,9 +33,7 @@ public class RicartAgrawalaServer {
     private int estado = 0;
     private final long min_t = 1000;
     private final long max_t = 3000;
-    private final String delim = "-";
     private final static Object seccion = new Object();
-    //Difusion dif = new Difusion();
     ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
 
@@ -52,118 +51,113 @@ public class RicartAgrawalaServer {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("difusion")
-    public String difusion() {
+    public Response difusion() {
 
         estado = BUSCADA;
-        Difusion dif = new Difusion(procesos,C_lamport);
-        dif.check();
+        ArrayList<Proceso> array_para_difusion = (ArrayList<Proceso>) procesos.clone();
+        array_para_difusion.remove(0);
+        this.multidifusion(array_para_difusion, C_lamport);
 
         //hacer la difusion a todas las otras maquinas
         estado = TOMADA;
         C_lamport++;
-        return "exito";
+        return Response.status(Response.Status.OK).entity("Difusion realizada").build();
     }
 
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("peticion")
-    public String peticion(@QueryParam("reloj") String reloj) {
+    public Response peticion(@QueryParam("reloj") String reloj, @QueryParam("numero") String numero) {
         // Estado state = Estado.getInstancia();
+        int num_proceso_remoto = Integer.parseInt(numero);
         int C_peticion = Integer.parseInt(reloj);
         int Ti = C_lamport;
 
         C_lamport = (C_lamport > C_peticion) ? (C_lamport + 1) : (C_peticion + 1); //actualizar el valor del reloj
 
         System.out.println("llamada a petición");
+
+
         while (true) {
             if (estado == LIBERADA) {
-
-                return "concedido";
+                return Response.status(Response.Status.OK).entity("Acceso concedido (la seccion está libre)").build();
             } else if (estado == BUSCADA) {
-                    if(C_peticion<Ti){
-                        return "concedido por ser C menor";
+                if (C_peticion < Ti) {
+                    return Response.status(Response.Status.OK).entity("Acceso concedido (el reloj es menor)").build();
+                } else if (C_peticion == Ti) {
+                    if (num_proceso_remoto < this.procesos.get(0).numero) {
+                        return Response.status(Response.Status.OK).entity("Acceso concedido (el reloj es igual pero el identificador es menor)").build();
                     }
-
-            } //si no se le ha concedido acceso debe esperar
+                }
+            }
+            //si no se le ha concedido acceso debe esperar
             synchronized (seccion) {
                 System.out.println("Esperar por permiso");
-                        try {
-                            seccion.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                try {
+                    seccion.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error por espera interrumpido").build();
                 }
             }
 
+        }
     }
 
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("liberado")
-    public Response liberado(){
-            estado = LIBERADA;
-            synchronized (seccion) {
-                seccion.notifyAll();
-            }
-            return  Response.status(Response.Status.OK).entity("Sección liberada").build();
-
-    }
 
 
-    /*
-    * Inicia el programa el grueso del programa en si mismo.
-    * Comienzan a simularse los cálculos, etc.
-    *
-    * */
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("init")
-    public Response init(String body){
+@POST
+@Produces(MediaType.APPLICATION_JSON)
+@Path("liberado")
+public Response liberado(){
+        estado=LIBERADA;
+synchronized (seccion){
+        seccion.notifyAll();
+        }
+        return Response.status(Response.Status.OK).entity("Sección liberada").build();
+
+        }
+
+
+/*
+ * Inicia el programa el grueso del programa en si mismo.
+ * Comienzan a simularse los cálculos, etc.
+ *
+ * */
+
+@POST
+@Produces(MediaType.APPLICATION_JSON)
+@Path("init")
+public Response init(String body){
         System.out.println(body);
-        ObjectMapper mapper = new ObjectMapper();
-        Proceso[] array_procesos = new Proceso[0];
+        ObjectMapper mapper=new ObjectMapper();
+        Proceso[]array_procesos;
         try{
-            array_procesos = mapper.readValue(body, Proceso[].class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.BAD_REQUEST).entity("No se especificaron los procesos en el formato correcto").build();
+        array_procesos=mapper.readValue(body,Proceso[].class);
+        }catch(IOException e){
+        e.printStackTrace();
+        return Response.status(Response.Status.BAD_REQUEST).entity("No se especificaron los procesos en el formato correcto").build();
         }
-        if (array_procesos.length == 0){
-            return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
+        if(array_procesos.length==0){
+        return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
         }
-        this.procesos = new ArrayList<>(Arrays.asList(array_procesos));
-        CriticalSection cs = new CriticalSection(array_procesos[0].getNumero(), array_procesos[0].getIp());
-        cs.start();
+        this.procesos=new ArrayList<>(Arrays.asList(array_procesos));
 
-        for (Proceso p: array_procesos){
+        /*
+        for (Proceso p: this.procesos){
             System.out.println(p);
-        }
-
-        /*
-        ip_propia = parts[1];
-        System.out.println("Mi ip propia es: " + ip_propia);
-        System.out.println("Y el resto de ips:");
-       /* for( String part : parts){
-            if(!part.equals(ip_propia)||!part.equals(String.valueOf(num_proceso))){
-                System.out.println(part);
-               ips_procesos = ips_procesos.concat(part);
-            }
         }*/
-        /*
-       for(int i=2;i<parts.length;i++){
-           if(!parts[i].equals(ip_propia)) {
-               ips_procesos = ips_procesos.concat(parts[i]);
-               ips_procesos = ips_procesos.concat(delim);
-           }
-       }*/
+
+        CriticalSection cs=new CriticalSection(array_procesos[0].numero,array_procesos[0].ip);
+        cs.start();
 
 
         System.out.println("Inicialización correcta");
         return Response.status(Response.Status.OK).entity("Corriendo con éxito").build();
-    }
+        }
 
     /*
     @POST
@@ -269,6 +263,31 @@ public class RicartAgrawalaServer {
     }*/
 
 
+private int multidifusion(ArrayList<Proceso> procesos,int C_lamport){
+
+        /* Ver si es necesario ponerlo sin timeouts en las difusiones,
+        la idea es que se quede esperando cada proceso a que le respondan que está libre sin recbir nada antes
+        client.property(ClientProperties.CONNECT_TIMEOUT, 0);
+        client.property(ClientProperties.READ_TIMEOUT,    0);
+        */
+
+        //TODO multidifusion de las peticiones
+        CountDownLatch cdl=new CountDownLatch(procesos.size()-1); // Esto en teoría espera a que n procesos llamen al countdown cuando lo hayan recibido.
+        System.out.println("Esperar a:"+procesos);
 
 
-}
+        for(Proceso proceso:procesos){
+        System.out.println("En difusion a por la ip"+proceso.ip);
+        URI uri=UriBuilder.fromUri("http://"+proceso.ip+"/RicartAgrawalaServer").build();
+        new Thread(new Peticion(uri,cdl,C_lamport)).start();
+        }
+        try{
+        cdl.await();
+        }catch(InterruptedException e){
+        e.printStackTrace();
+        return 1;
+        }
+
+        return 0;
+        }
+        }

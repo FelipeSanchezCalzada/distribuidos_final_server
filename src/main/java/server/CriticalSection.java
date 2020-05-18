@@ -2,6 +2,8 @@ package server;
 
 
 
+import server.models.Proceso;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -12,6 +14,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 public class CriticalSection extends Thread{
 
@@ -48,16 +52,15 @@ public class CriticalSection extends Thread{
 
         estado = LIBERADA;
         clock_i = 0;
-        URI uri = UriBuilder.fromUri("http://"+ip_propia+"/RicartAgrawalaServer").build();
+        URI uri = UriBuilder.fromUri("http://" + ip_propia + "/RicartAgrawalaServer").build();
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri);
-        System.out.println("en sc, mi ip es:"+ip_propia);
+        System.out.println("En sc, mi ip es: " + ip_propia);
 
-        for(int i=0;i<10;i++) { // 100 ejecuciones
+        for(int i=0; i<10; i++) { // 100 ejecuciones
 
             //difusión de la petición
-            estado = BUSCADA;
-
+            //estado = BUSCADA;
             String res = target.path("difusion").request(MediaType.APPLICATION_JSON).get(String.class);
             // Aqui debería esperar el proceso a la respuesta de que tiene la entrada libre
             System.out.println("La respuesta del sistema es: " + res);
@@ -81,7 +84,7 @@ public class CriticalSection extends Thread{
             //TODO escribir log de salida con el tiempo
 
             String salida = String.format("P%d S %s\n",num_proceso,System.currentTimeMillis());
-            System.out.printf(salida);
+            System.out.println(salida);
 
                 bw.write(salida);
 
@@ -102,6 +105,7 @@ public class CriticalSection extends Thread{
         }
 
     }
+
 
 
 
