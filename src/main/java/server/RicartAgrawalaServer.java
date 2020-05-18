@@ -1,5 +1,10 @@
 package server;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import server.models.Proceso;
+
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
@@ -9,6 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Set;
 
 
 @Path("RicartAgrawalaServer")
@@ -25,8 +32,7 @@ public class RicartAgrawalaServer {
     private final String delim = "-";
     private final static Object seccion = new Object();
     //Difusion dif = new Difusion();
-    String ips_procesos = ""; // String con las ips del resto de procesos (sin la ip propia)
-    String ip_propia;
+    ArrayList<Process> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int num_proceso;
     int C_lamport = 0;
 
@@ -40,6 +46,7 @@ public class RicartAgrawalaServer {
         return tiempos;
     }
 
+    /*
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("difusion")
@@ -53,7 +60,7 @@ public class RicartAgrawalaServer {
         estado = TOMADA;
         C_lamport++;
         return "exito";
-    }
+    }*/
 
 
     @GET
@@ -112,11 +119,22 @@ public class RicartAgrawalaServer {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("init")
-    public Response init(String body) {
+    public Response init(String body){
         System.out.println(body);
+        ObjectMapper mapper = new ObjectMapper();
+        Proceso[] array_procesos = new Proceso[0];
+        try{
+            array_procesos = mapper.readValue(body, Proceso[].class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        String[] parts = body.split(delim);
-        num_proceso = Integer.parseInt(parts[0]);
+
+        for (Proceso p: array_procesos){
+            System.out.println(p);
+        }
+        return new Response("ok");
+        /*
         ip_propia = parts[1];
         System.out.println("Mi ip propia es: " + ip_propia);
         System.out.println("Y el resto de ips:");
@@ -126,7 +144,7 @@ public class RicartAgrawalaServer {
                ips_procesos = ips_procesos.concat(part);
             }
         }*/
-
+        /*
        for(int i=2;i<parts.length;i++){
            if(!parts[i].equals(ip_propia)) {
                ips_procesos = ips_procesos.concat(parts[i]);
@@ -138,9 +156,10 @@ public class RicartAgrawalaServer {
         cs.start();
         System.out.println("Después de inicialization");
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        return new Response("ok");
+        return new Response("ok");*/
     }
 
+    /*
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("iniciarNTP")
@@ -188,8 +207,9 @@ public class RicartAgrawalaServer {
 
 
         return "NTP inicial realizado";
-    }
+    }*/
 
+    /*
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("finalizar")
@@ -240,7 +260,7 @@ public class RicartAgrawalaServer {
 
 
         return "Final realizado";
-    }
+    }*/
 
 
 
