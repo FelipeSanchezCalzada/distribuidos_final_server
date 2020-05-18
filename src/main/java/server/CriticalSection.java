@@ -58,7 +58,7 @@ public class CriticalSection extends Thread {
         System.out.println("En sc, mi ip es: " + ip_propia);
 
         for (int i = 0; i < 100; i++) { // 100 ejecuciones
-
+            System.out.println("iteracion:"+i);
             //difusión de la petición
             //estado = BUSCADA;
             String res = target.path("difusion").request(MediaType.APPLICATION_JSON).get(String.class);

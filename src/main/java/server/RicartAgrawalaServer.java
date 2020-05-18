@@ -70,6 +70,7 @@ public class RicartAgrawalaServer {
     @Path("peticion")
     public Response peticion(@QueryParam("reloj") String reloj, @QueryParam("id") String id) {
         // Estado state = Estado.getInstancia();
+        System.out.println("en peticion, reloj:"+reloj+" id: "+ id);
         int id_proceso_remoto = Integer.parseInt(id);
         int C_peticion = Integer.parseInt(reloj);
         int Ti = C_lamport;
@@ -93,13 +94,14 @@ public class RicartAgrawalaServer {
             }
             //si no se le ha concedido acceso debe esperar
             synchronized (seccion) {
-                System.out.println("Esperar por permiso");
+                System.out.println("Esperar por permiso : " + System.currentTimeMillis());
                 try {
                     seccion.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error por espera interrumpido").build();
                 }
+                System.out.println("Permiso concedido : " + System.currentTimeMillis());
             }
 
         }
@@ -260,7 +262,7 @@ public class RicartAgrawalaServer {
     }*/
 
 
-    private int multidifusion(ArrayList<Proceso> procesos, int C_lamport) {
+    private int multidifusion(ArrayList<Proceso> lprocesos, int C_lamport) {
 
         /* Ver si es necesario ponerlo sin timeouts en las difusiones,
         la idea es que se quede esperando cada proceso a que le respondan que está libre sin recbir nada antes
@@ -269,11 +271,11 @@ public class RicartAgrawalaServer {
         */
 
         //TODO multidifusion de las peticiones
-        CountDownLatch cdl = new CountDownLatch(procesos.size() - 1); // Esto en teoría espera a que n procesos llamen al countdown cuando lo hayan recibido.
-        System.out.println("Esperar a:" + procesos);
+        CountDownLatch cdl = new CountDownLatch(lprocesos.size()); // Esto en teoría espera a que n procesos llamen al countdown cuando lo hayan recibido.
+        System.out.println("Esperar a:" + lprocesos.size());
 
 
-        for (Proceso proceso : procesos) {
+        for (Proceso proceso : lprocesos) {
             System.out.println("En difusion a por la ip" + proceso.ip);
             URI uri = UriBuilder.fromUri("http://" + proceso.ip + "/RicartAgrawalaServer").build();
             new Thread(new Peticion(uri, cdl, C_lamport, procesos.get(0).numero)).start();

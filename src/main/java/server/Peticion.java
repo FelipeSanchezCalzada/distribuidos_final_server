@@ -25,9 +25,10 @@ public class Peticion implements Runnable {
 
     @Override
         public void run() {
+
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri);
-        String res = target.path("peticion").queryParam("reloj",C_lamport).queryParam("id", this.id + "" ).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = target.path("peticion").queryParam("reloj",String.valueOf(C_lamport)).queryParam("id", String.valueOf(id) ).request(MediaType.APPLICATION_JSON).get(String.class);
         System.out.println("La respuesta a la peticion es: " + res);
         cdl.countDown();
         }
