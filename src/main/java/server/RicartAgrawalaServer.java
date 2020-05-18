@@ -15,6 +15,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 
 
@@ -32,8 +33,7 @@ public class RicartAgrawalaServer {
     private final String delim = "-";
     private final static Object seccion = new Object();
     //Difusion dif = new Difusion();
-    ArrayList<Process> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
-    int num_proceso;
+    ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
 
 
@@ -128,7 +128,7 @@ public class RicartAgrawalaServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        this.procesos = new ArrayList<>(Arrays.asList(array_procesos));
 
         for (Proceso p: array_procesos){
             System.out.println(p);
