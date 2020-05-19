@@ -33,6 +33,7 @@ public class RicartAgrawalaServer {
     private int estado = 0;
     private final long min_t = 1000;
     private final long max_t = 3000;
+    private static final String delim = "-";
     private final static Object seccion = new Object();
     ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
@@ -160,12 +161,16 @@ public class RicartAgrawalaServer {
         return Response.status(Response.Status.OK).entity("Corriendo con éxito").build();
     }
 
-    /*
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("iniciarNTP")
-    public String iniciarNTP(){
-        System.out.println("en IniciarNTP");
+    public Response iniciarNTP(){
+        //Todavia no se llamó a init
+        if (this.procesos.size() == 0){
+            return Response.status(Response.Status.FORBIDDEN).entity("Acceso denegado, hay que llamar antes a init.").build();
+        }
+
+        System.out.println("En IniciarNTP");
         long offset;
         long delay;
         FileWriter fw;
@@ -173,16 +178,16 @@ public class RicartAgrawalaServer {
         try {
             fw = new FileWriter("ntp.txt");
             bw = new PrintWriter(fw);
-            bw.write("NTP inicial");
+            bw.println("NTP inicial");
         } catch (IOException e) {
             e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Nose pudo abrir el fichero.").build();
         }
-        String[] ips = ips_procesos.split(delim);
-        for(String ip : ips){
 
+        for(Proceso p : procesos){
             offset = Long.MAX_VALUE;
             delay = Long.MAX_VALUE;
-            URI uri = UriBuilder.fromUri("http://"+ip+"/NTPserver").build();
+            URI uri = UriBuilder.fromUri("http://" + p.ip + "/NTPserver").build();
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri);
             for (int i = 0; i < 10 ; i++) {
@@ -198,17 +203,17 @@ public class RicartAgrawalaServer {
                 if(delay > t_delay) {
                     delay = t_delay;
                     offset = t_offset;
-                    System.out.println("nuevo delay");
+                    System.out.println("nuevo delay. Delay = " + delay + "Offset = " + offset);
                 }
             }
-            System.out.println("a escribir");
-            bw.write(ip+delim+delay+offset+"\n");
+            System.out.println("Escribiendo: " + p.ip + delim + delay + delim + offset);
+            bw.println(p.ip + delim + delay + delim + offset);
 
         }
 
 
-        return "NTP inicial realizado";
-    }*/
+        return Response.status(Response.Status.OK).entity("Finalizados los 10 NTP con exito").build();
+    }
 
     /*
     @POST
