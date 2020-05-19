@@ -29,7 +29,7 @@ public class Peticion implements Runnable {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri);
         String res = target.path("peticion").queryParam("reloj",String.valueOf(C_lamport)).queryParam("id", String.valueOf(id) ).request(MediaType.APPLICATION_JSON).get(String.class);
-        System.out.println("La respuesta a la peticion es: " + res);
+        System.out.println("La respuesta a la peticion a " + uri.toString()+ " es de " + res);
         cdl.countDown();
         }
 }

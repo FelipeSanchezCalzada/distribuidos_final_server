@@ -80,7 +80,7 @@ public class RicartAgrawalaServer {
         System.out.println("llamada a petición");
 
 
-        while (true) {
+
             if (estado == LIBERADA) {
                 return Response.status(Response.Status.OK).entity("Acceso concedido (la seccion está libre)").build();
             } else if (estado == BUSCADA) {
@@ -94,17 +94,19 @@ public class RicartAgrawalaServer {
             }
             //si no se le ha concedido acceso debe esperar
             synchronized (seccion) {
-                System.out.println("Esperar por permiso : " + System.currentTimeMillis());
+                System.out.println("id: " + id_proceso_remoto +  " Esperar por permiso : " + System.currentTimeMillis());
                 try {
                     seccion.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error por espera interrumpido").build();
                 }
-                System.out.println("Permiso concedido : " + System.currentTimeMillis());
+                System.out.println("id: " + id_proceso_remoto + "Permiso concedido : " + System.currentTimeMillis());
+                return Response.status(Response.Status.OK).entity("Acceso concedido (la seccion acaba de ser liberada)").build();
+
             }
 
-        }
+
     }
 
 
