@@ -31,6 +31,7 @@ public class RicartAgrawalaServer {
     private final long min_t = 1000;
     private final long max_t = 3000;
     private static final String delim = "-";
+    private static final String delimitador_logs_NTP = "|";
     private final static Object seccion = new Object();
     ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
@@ -68,7 +69,7 @@ public class RicartAgrawalaServer {
     @Path("peticion")
     public Response peticion(@QueryParam("reloj") String reloj, @QueryParam("id") String id) {
         // Estado state = Estado.getInstancia();
-        System.out.println("en peticion, reloj:"+reloj+" id: "+ id);
+        System.out.println("en peticion, reloj:" + reloj+" id: "+ id);
         int id_proceso_remoto = Integer.parseInt(id);
         int C_peticion = Integer.parseInt(reloj);
         int Ti = C_lamport;
@@ -185,11 +186,10 @@ public class RicartAgrawalaServer {
         long offset;
         long delay;
         FileWriter fw;
-        PrintWriter bw = null;
+        PrintWriter bw;
         try {
             fw = new FileWriter("ntp.txt");
             bw = new PrintWriter(fw);
-            bw.println("NTP inicial");
         } catch (IOException e) {
             e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Nose pudo abrir el fichero.").build();
@@ -217,8 +217,9 @@ public class RicartAgrawalaServer {
                     System.out.println("nuevo delay. Delay = " + delay + "Offset = " + offset);
                 }
             }
-            System.out.println("Escribiendo: " + p.ip + delim + delay + delim + offset);
-            bw.write(p.ip + delim + delay + delim + offset+"\n");
+            String log = (p.numero + 1) + delimitador_logs_NTP +  p.ip + delimitador_logs_NTP + delay + delimitador_logs_NTP + offset;
+            System.out.println("Escribiendo: " + log);
+            bw.println(log);
 
         }
         try {
@@ -242,14 +243,14 @@ public class RicartAgrawalaServer {
 
         long offset;
         long delay;
-        FileWriter fw = null;
-        PrintWriter bw = null;
+        FileWriter fw;
+        PrintWriter bw;
         try {
             fw = new FileWriter("ntp.txt",true);
             bw = new PrintWriter(fw);
-            bw.write("Al finalizar");
         } catch (IOException e) {
             e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Nose pudo abrir el fichero.").build();
         }
 
         for(Proceso p : procesos){
@@ -274,8 +275,9 @@ public class RicartAgrawalaServer {
                     System.out.println("nuevo delay. Delay = " + delay + "Offset = " + offset);
                 }
             }
-            System.out.println("Escribiendo: " + p.ip + delim + delay + delim + offset);
-            bw.write(p.ip + delim + delay + delim + offset+"\n");
+            String log = (p.numero + 1) + delimitador_logs_NTP +  p.ip + delimitador_logs_NTP + delay + delimitador_logs_NTP + offset;
+            System.out.println("Escribiendo: " + log);
+            bw.println(log);
 
         }
         try {

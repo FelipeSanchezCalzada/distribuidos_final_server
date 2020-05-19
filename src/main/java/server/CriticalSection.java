@@ -75,7 +75,7 @@ public class CriticalSection extends Thread {
 
             estado = TOMADA;
             //entrada seccion critica
-            String entrada = String.format("P%d E %s\n", this.num_proceso + 1, System.currentTimeMillis());
+            String entrada = String.format("P%d E %s", this.num_proceso + 1, System.currentTimeMillis());
             System.out.println(entrada);
             bw.println(entrada);
             try {
@@ -87,9 +87,9 @@ public class CriticalSection extends Thread {
             //salida seccion critica
             estado = LIBERADA;
 
-            String salida = String.format("P%d S %s\n", this.num_proceso + 1, System.currentTimeMillis());
+            String salida = String.format("P%d S %s", this.num_proceso + 1, System.currentTimeMillis());
             System.out.println(salida);
-            bw.write(salida);
+            bw.println(salida);
 
 
             //mensaje de salida para poder responder a las peticiones
