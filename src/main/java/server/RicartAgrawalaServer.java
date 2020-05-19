@@ -31,7 +31,7 @@ public class RicartAgrawalaServer {
     private final long min_t = 1000;
     private final long max_t = 3000;
     private static final String delim = "-";
-    private static final String delimitador_logs_NTP = "|";
+    private static final String delimitador_logs_NTP = "#";
     private final static Object seccion = new Object();
     ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
