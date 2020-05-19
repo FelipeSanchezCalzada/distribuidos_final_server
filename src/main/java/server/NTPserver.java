@@ -24,7 +24,9 @@ public class NTPserver {
           tiempos = tiempos.concat(delim);
 
         try {
-            Thread.sleep((long) (Math.random() * (max_t - min_t)) + min_t);
+            long tiempo_espera = (long) (Math.random() * (max_t - min_t)) + min_t;
+            Thread.sleep(tiempo_espera);
+
         } catch (InterruptedException e) {
             e.printStackTrace();
 

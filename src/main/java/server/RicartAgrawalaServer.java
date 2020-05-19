@@ -1,7 +1,5 @@
 package server;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import server.models.Proceso;
 
@@ -18,7 +16,6 @@ import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 
@@ -164,11 +161,25 @@ public class RicartAgrawalaServer {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("iniciarNTP")
-    public Response iniciarNTP(){
+    public Response iniciarNTP(String body){
+
+        System.out.println(body);
+        ObjectMapper mapper = new ObjectMapper();
+        Proceso[] array_procesos;
+        try {
+            array_procesos = mapper.readValue(body, Proceso[].class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity("No se especificaron los procesos en el formato correcto").build();
+        }
+        if (array_procesos.length == 0) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
+        }
+        /*
         //Todavia no se llamó a init
         if (this.procesos.size() == 0){
             return Response.status(Response.Status.FORBIDDEN).entity("Acceso denegado, hay que llamar antes a init.").build();
-        }
+        }*/
 
         System.out.println("En IniciarNTP");
         long offset;
@@ -184,16 +195,16 @@ public class RicartAgrawalaServer {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Nose pudo abrir el fichero.").build();
         }
 
-        for(Proceso p : procesos){
+        for(Proceso p : array_procesos){
             offset = Long.MAX_VALUE;
             delay = Long.MAX_VALUE;
             URI uri = UriBuilder.fromUri("http://" + p.ip + "/NTPserver").build();
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri);
             for (int i = 0; i < 10 ; i++) {
-                Long t0 = System.currentTimeMillis();
+                long t0 = System.currentTimeMillis();
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
-                Long t3 = System.currentTimeMillis();
+                long t3 = System.currentTimeMillis();
                 String[] parts = res.split(delim);
                 long t1 = Long.parseLong(parts[0]);
                 long t2 = Long.parseLong(parts[1]);
@@ -207,66 +218,75 @@ public class RicartAgrawalaServer {
                 }
             }
             System.out.println("Escribiendo: " + p.ip + delim + delay + delim + offset);
-            bw.println(p.ip + delim + delay + delim + offset);
+            bw.write(p.ip + delim + delay + delim + offset+"\n");
 
         }
-
+        try {
+            bw.close();
+            fw.close();
+        } catch (IOException ex) {
+            System.err.format("IOException: %s%n", ex);
+        }
 
         return Response.status(Response.Status.OK).entity("Finalizados los 10 NTP con exito").build();
     }
 
-    /*
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("finalizar")
-    public String finalizar(){
-        if(num_proceso!=1){
-            return "no realizado";
+    public Response finalizar(){
+        if(procesos.get(0).numero != 0){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Nose pudo abrir el fichero.").build();
         }
+
         long offset;
         long delay;
-        FileWriter fw;
-        BufferedWriter bw = null;
+        FileWriter fw = null;
+        PrintWriter bw = null;
         try {
             fw = new FileWriter("ntp.txt",true);
-            bw = new BufferedWriter(fw);
+            bw = new PrintWriter(fw);
             bw.write("Al finalizar");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String[] ips = ips_procesos.split(delim);
-        for(String ip : ips){
 
+        for(Proceso p : procesos){
             offset = Long.MAX_VALUE;
             delay = Long.MAX_VALUE;
-            URI uri = UriBuilder.fromUri("http://"+ip+"/NTPserver").build();
+            URI uri = UriBuilder.fromUri("http://" + p.ip + "/NTPserver").build();
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri);
             for (int i = 0; i < 10 ; i++) {
-                Long t0 = System.currentTimeMillis();
+                long t0 = System.currentTimeMillis();
                 String res = target.path("tiempo").request(MediaType.APPLICATION_JSON).get(String.class);
-                Long t3 = System.currentTimeMillis();
+                long t3 = System.currentTimeMillis();
                 String[] parts = res.split(delim);
-                Long t1 = Long.parseLong(parts[0]);
-                Long t2 = Long.parseLong(parts[1]);
-                Long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
-                Long t_delay = (t1-t0) + (t3-t2);
+                long t1 = Long.parseLong(parts[0]);
+                long t2 = Long.parseLong(parts[1]);
+                long t_offset = ( (t1-t0) + (t2-t3) ) / 2;
+                long t_delay = (t1-t0) + (t3-t2);
 
                 if(delay > t_delay) {
                     delay = t_delay;
                     offset = t_offset;
+                    System.out.println("nuevo delay. Delay = " + delay + "Offset = " + offset);
                 }
             }
-            try {
-                bw.write(ip+delim+delay+offset+"\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            System.out.println("Escribiendo: " + p.ip + delim + delay + delim + offset);
+            bw.write(p.ip + delim + delay + delim + offset+"\n");
+
+        }
+        try {
+            bw.close();
+            fw.close();
+        } catch (IOException ex) {
+            System.err.format("IOException: %s%n", ex);
         }
 
-
-        return "Final realizado";
-    }*/
+        return Response.status(Response.Status.OK).entity("Finalizados los 10 NTP con exito").build();
+    }
 
 
     private int multidifusion(ArrayList<Proceso> lprocesos, int C_lamport) {

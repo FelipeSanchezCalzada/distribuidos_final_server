@@ -104,6 +104,9 @@ public class CriticalSection extends Thread {
         } catch (IOException ex) {
             System.err.format("IOException: %s%n", ex);
         }
+        if(this.num_proceso == 0){
+            String res = target.path("finalizar").request(MediaType.APPLICATION_JSON).post(null,String.class);
+        }
 
     }
 
