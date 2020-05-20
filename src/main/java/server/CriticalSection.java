@@ -61,26 +61,29 @@ public class CriticalSection extends Thread {
             System.out.println("iteracion:"+i);
             //difusión de la petición
             //estado = BUSCADA;
-            String res = target.path("difusion").request(MediaType.APPLICATION_JSON).get(String.class);
-            // Aqui debería esperar el proceso a la respuesta de que tiene la entrada libre
-            System.out.println("La respuesta del sistema es: " + res);
-            //aceptado por todos
 
-            try {
+            try { //simulacion calculos fuera de la seccion critica
                 long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_max - this.rango_tarea_min)) + this.rango_tarea_min));
                 Thread.sleep(tiempo_tarea);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
+            String res = target.path("difusion").request(MediaType.APPLICATION_JSON).get(String.class);
+            // Aqui debería esperar el proceso a la respuesta de que tiene la entrada libre
+            System.out.println("La respuesta del sistema es: " + res);
+            //aceptado por todos
+
             estado = TOMADA;
             //entrada seccion critica
             String entrada = String.format("P%d E %s", this.num_proceso + 1, System.currentTimeMillis());
             System.out.println(entrada);
             bw.println(entrada);
-            try {
-                long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min));
-                Thread.sleep(tiempo_tarea);
+
+            try { //Simulacion calculos seccion critica
+                //long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min));
+                //Thread.sleep(tiempo_tarea);
+                Thread.sleep(300);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

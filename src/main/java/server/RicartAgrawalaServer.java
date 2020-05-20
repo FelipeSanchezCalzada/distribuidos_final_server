@@ -35,6 +35,7 @@ public class RicartAgrawalaServer {
     private final static Object seccion = new Object();
     ArrayList<Proceso> procesos = new ArrayList<>();// Array de todos los procesos, el primer elemento es el actual
     int C_lamport = 0;
+    int Ti = 0;
 
 
     @GET
@@ -53,9 +54,11 @@ public class RicartAgrawalaServer {
     public Response difusion() {
 
         estado = BUSCADA;
+        Ti = C_lamport;
         ArrayList<Proceso> array_para_difusion = (ArrayList<Proceso>) procesos.clone();
         array_para_difusion.remove(0);
-        this.multidifusion(array_para_difusion, C_lamport);
+
+        this.multidifusion(array_para_difusion, Ti);
 
         //hacer la difusion a todas las otras maquinas
         estado = TOMADA;
@@ -69,10 +72,10 @@ public class RicartAgrawalaServer {
     @Path("peticion")
     public Response peticion(@QueryParam("reloj") String reloj, @QueryParam("id") String id) {
         // Estado state = Estado.getInstancia();
-        System.out.println("en peticion, reloj:" + reloj+" id: "+ id);
+        System.out.println("en peticion, reloj:" + reloj+" id: "+ id + "  ;mi reloj actual es : " +  C_lamport + "  El de mi peticion es: " +Ti );
         int id_proceso_remoto = Integer.parseInt(id);
         int C_peticion = Integer.parseInt(reloj);
-        int Ti = C_lamport;
+
 
         C_lamport = (C_lamport > C_peticion) ? (C_lamport + 1) : (C_peticion + 1); //actualizar el valor del reloj
 
@@ -81,12 +84,15 @@ public class RicartAgrawalaServer {
 
 
             if (estado == LIBERADA) {
+                System.out.println("hemos concedido acceso a " +id+" porque la seccion estaba libre");
                 return Response.status(Response.Status.OK).entity("Acceso concedido (la seccion está libre)").build();
             } else if (estado == BUSCADA) {
                 if (C_peticion < Ti) {
+                    System.out.println("hemos concedido acceso a " +id+" porque el reloj es menor:" + C_peticion + " frente a" + Ti);
                     return Response.status(Response.Status.OK).entity("Acceso concedido (el reloj es menor)").build();
                 } else if (C_peticion == Ti) {
                     if (id_proceso_remoto < this.procesos.get(0).numero) {
+                        System.out.println("hemos concedido acceso a " +id+" su id es menor que el nuestro: " + this.procesos.get(0).numero);
                         return Response.status(Response.Status.OK).entity("Acceso concedido (el reloj es igual pero el identificador es menor)").build();
                     }
                 }
@@ -98,6 +104,7 @@ public class RicartAgrawalaServer {
                     seccion.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    System.out.println("¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡Espera interrumpida!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error por espera interrumpido").build();
                 }
                 System.out.println("id: " + id_proceso_remoto + "Permiso concedido : " + System.currentTimeMillis());
@@ -291,7 +298,7 @@ public class RicartAgrawalaServer {
     }
 
 
-    private int multidifusion(ArrayList<Proceso> lprocesos, int C_lamport) {
+    private int multidifusion(ArrayList<Proceso> lprocesos, int C_l) {
 
         /* Ver si es necesario ponerlo sin timeouts en las difusiones,
         la idea es que se quede esperando cada proceso a que le respondan que está libre sin recbir nada antes
@@ -307,7 +314,7 @@ public class RicartAgrawalaServer {
         for (Proceso proceso : lprocesos) {
             System.out.println("En difusion a por la ip" + proceso.ip);
             URI uri = UriBuilder.fromUri("http://" + proceso.ip + "/RicartAgrawalaServer").build();
-            new Thread(new Peticion(uri, cdl, C_lamport, procesos.get(0).numero)).start();
+            new Thread(new Peticion(uri, cdl, C_l, procesos.get(0).numero)).start();
         }
         try {
             cdl.await();
