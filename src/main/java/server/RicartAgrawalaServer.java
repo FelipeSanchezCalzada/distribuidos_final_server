@@ -71,7 +71,7 @@ public class RicartAgrawalaServer {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("peticion")
     public Response peticion(@QueryParam("reloj") String reloj, @QueryParam("id") String id) {
-        // Estado state = Estado.getInstancia();
+
         System.out.println("en peticion, reloj:" + reloj+" id: "+ id + "  ;mi reloj actual es : " +  C_lamport + "  El de mi peticion es: " +Ti );
         int id_proceso_remoto = Integer.parseInt(id);
         int C_peticion = Integer.parseInt(reloj);
@@ -183,11 +183,6 @@ public class RicartAgrawalaServer {
         if (array_procesos.length == 0) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Lista de procesos vacía").build();
         }
-        /*
-        //Todavia no se llamó a init
-        if (this.procesos.size() == 0){
-            return Response.status(Response.Status.FORBIDDEN).entity("Acceso denegado, hay que llamar antes a init.").build();
-        }*/
 
         System.out.println("En IniciarNTP");
         long offset;

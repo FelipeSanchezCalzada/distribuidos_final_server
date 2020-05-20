@@ -14,14 +14,10 @@ import java.util.Random;
 
 public class CriticalSection extends Thread {
 
-    final int LIBERADA = 0;
-    final int BUSCADA = 1;
-    final int TOMADA = 2;
     final float rango_tarea_min =  0.3f;
     final float rango_tarea_max = 0.5f;
     final float rango_tarea_sc_min =  0.1f;
     final float rango_tarea_sc_max = 0.3f;
-    int estado;
     long clock_i;
     long clock_t;
     String ip_propia;
@@ -44,13 +40,8 @@ public class CriticalSection extends Thread {
             e.printStackTrace();
             return;
         }
-        /*try {
-            Thread.sleep(5000); //esperamos 5 segundos para que se de tiempo a iniciar todos
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
 
-        estado = LIBERADA;
+
         clock_i = 0;
         URI uri = UriBuilder.fromUri("http://" + ip_propia + "/RicartAgrawalaServer").build();
         Client client = ClientBuilder.newClient();
@@ -60,7 +51,7 @@ public class CriticalSection extends Thread {
         for (int i = 0; i < 100; i++) { // 100 ejecuciones
             System.out.println("iteracion:"+i);
             //difusión de la petición
-            //estado = BUSCADA;
+
 
             try { //simulacion calculos fuera de la seccion critica
                 long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_max - this.rango_tarea_min)) + this.rango_tarea_min));
@@ -74,21 +65,20 @@ public class CriticalSection extends Thread {
             System.out.println("La respuesta del sistema es: " + res);
             //aceptado por todos
 
-            estado = TOMADA;
+
             //entrada seccion critica
             String entrada = String.format("P%d E %s", this.num_proceso + 1, System.currentTimeMillis());
             System.out.println(entrada);
             bw.println(entrada);
 
             try { //Simulacion calculos seccion critica
-                //long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min));
-                //Thread.sleep(tiempo_tarea);
-                Thread.sleep(300);
+                long tiempo_tarea = (long) (1000 * ((new Random().nextFloat() * (this.rango_tarea_sc_max - this.rango_tarea_sc_min)) + this.rango_tarea_sc_min));
+                Thread.sleep(tiempo_tarea);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             //salida seccion critica
-            estado = LIBERADA;
+
 
             String salida = String.format("P%d S %s", this.num_proceso + 1, System.currentTimeMillis());
             System.out.println(salida);
